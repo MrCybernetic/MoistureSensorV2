@@ -52,10 +52,11 @@ void setup() {
 void loop() {
     client.loop();
     if (client.connected()) {
+        Serial.println("Ready");
         if (Serial.available() > 0) {
             String msg = Serial.readStringUntil('\n');
-            char Buf[msg.length()];
-            msg.toCharArray(Buf, msg.length());
+            char Buf[msg.length()+1];
+            msg.toCharArray(Buf, msg.length()+1);
             client.publish(topic_UP, Buf);
             Serial.println("Sent");
         }
