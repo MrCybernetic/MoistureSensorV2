@@ -1,3 +1,8 @@
+/*
+    This sketch transform the ESP01 into a "Serial to MQTT Bridge"
+
+    Cybernetic 06-2022
+*/
 #include <PubSubClient.h>
 #include <ESP8266WiFi.h>
 #include "credentials.h"
