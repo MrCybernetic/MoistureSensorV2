@@ -61,9 +61,8 @@ void loop() {
                 digitalWrite(ESPPin, LOW);
                 // Set the ports to be inputs - saves more power
                 pinMode(ESPPin, INPUT);
-                for (int i = 0; i < 255; i++)  // 225*8s=1800s=30min
-                {
-                    system_sleep();  // Send the unit to sleep
+                for (int i = 0; i < 255; i++) {  // 225*8s=1800s=30min
+                    system_sleep();              // Send the unit to sleep
                 }
                 // Set the ports to be output again
                 pinMode(ESPPin, OUTPUT);
@@ -76,14 +75,10 @@ void loop() {
 // system wakes up when wtchdog is timed out
 void system_sleep() {
     cbi(ADCSRA, ADEN);  // switch Analog to Digitalconverter OFF
-
     set_sleep_mode(SLEEP_MODE_PWR_DOWN);  // sleep mode is set here
     sleep_enable();
-
     sleep_mode();  // System actually sleeps here
-
     sleep_disable();  // System continues execution here when watchdog timed out
-
     sbi(ADCSRA, ADEN);  // switch Analog to Digitalconverter ON
 }
 
@@ -97,7 +92,6 @@ void setup_watchdog(int ii) {
     if (ii > 7) bb |= (1 << 5);
     bb |= (1 << WDCE);
     ww = bb;
-
     MCUSR &= ~(1 << WDRF);
     // start timed sequence
     WDTCR |= (1 << WDCE) | (1 << WDE);
