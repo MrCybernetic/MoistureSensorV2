@@ -46,7 +46,7 @@ float moistureValue = 0.0;  // 0-1000
 float batteryValue = 0.0;
 boolean ReadyReceived = false;
 const int maxtime = 200;
-unsigned long now=0;
+unsigned long now = 0;
 
 // Variables for the Sleep/power down modes:
 volatile boolean f_wdt = 1;
@@ -77,9 +77,9 @@ void loop() {
                 mySerial.print(moistureValue);
                 mySerial.print(",battery:");
                 mySerial.println(batteryValue);
-                now=millis();
+                now = millis();
             }
-            if (((msg == "Sent") || ((millis()-now)>maxtime)) && (ReadyReceived)) {
+            if (((msg == "Sent") || ((millis() - now) > maxtime)) && (ReadyReceived)) {
                 digitalWrite(ESPPin, LOW);
                 // Set the ports to be inputs - saves more power
                 pinMode(ESPPin, INPUT);
