@@ -71,7 +71,7 @@ void loop() {
         }
         if (mySerial.available() > 0) {
             String msg = mySerial.readStringUntil('\n');
-            if (msg == "Ready" && !ReadyReceived) {
+            if ((msg == "Ready") && !ReadyReceived) {
                 ReadyReceived = true;
                 mySerial.print("moisture:");
                 mySerial.print(moistureValue);
@@ -79,7 +79,7 @@ void loop() {
                 mySerial.println(batteryValue);
                 now=millis();
             }
-            if (msg == "Sent" || ((millis()-now)>maxtime) && (ReadyReceived)) {
+            if (((msg == "Sent") || ((millis()-now)>maxtime)) && (ReadyReceived)) {
                 digitalWrite(ESPPin, LOW);
                 // Set the ports to be inputs - saves more power
                 pinMode(ESPPin, INPUT);
