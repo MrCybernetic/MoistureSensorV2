@@ -1,10 +1,23 @@
-/*
-    This sketch transform the ESP01 into a "Serial to MQTT Bridge"
+//   __  __     _    _                __  __  ___ _____ _____
+//  |  \/  |___(_)__| |_ _  _ _ _ ___|  \/  |/ _ \_   _|_   _|
+//  | |\/| / _ \ (_-<  _| || | '_/ -_) |\/| | (_) || |   | |
+//  |_|_ |_\___/_/__/\__|\_,_|_| \___|_|  |_|\__\_\|_|   |_|
+//  | __/ __| _ \/  \/ |
+//  | _|\__ \  _/ () | |
+//  |___|___/_|  \__/|_|
+//
+// Cybernetic 06/2022
+// Running on ESP01
+// Description:
+//      1/ Connect to wifi
+//      2/ Tell to the Attiny, "I am Ready"
+//      3/ Wait to receive any data separate by \n
+//      4/ Publish them via MQTT on topic_UP topic
+//
 
-    Cybernetic 06-2022
-*/
-#include <PubSubClient.h>
 #include <ESP8266WiFi.h>
+#include <PubSubClient.h>
+
 #include "credentials.h"
 
 const char *ssid = WIFI_SSID;
@@ -60,8 +73,8 @@ void loop() {
         Serial.println("Ready");
         if (Serial.available() > 0) {
             String msg = Serial.readStringUntil('\n');
-            char Buf[msg.length()+1];
-            msg.toCharArray(Buf, msg.length()+1);
+            char Buf[msg.length() + 1];
+            msg.toCharArray(Buf, msg.length() + 1);
             client.publish(topic_UP, Buf);
             Serial.println("Sent");
         }

@@ -1,1 +1,5 @@
 Code/ESP01/MoistureMQTT_ESP/credentials.h
+.vscode/arduino.json
+.vscode/c_cpp_properties.json
+.vscode/tasks.json
+.vscode/launch.json

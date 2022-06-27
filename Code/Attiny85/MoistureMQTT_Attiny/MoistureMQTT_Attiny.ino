@@ -1,3 +1,23 @@
+
+//   __  __     _    _                __  __  ___ _____ _____
+//  |  \/  |___(_)__| |_ _  _ _ _ ___|  \/  |/ _ \_   _|_   _|
+//  | |\/| / _ \ (_-<  _| || | '_/ -_) |\/| | (_) || |   | |
+//  |_|_ |_\___/_/__/\__|\_,_|_| \___|_|  |_|\__\_\|_|   |_|
+//    /_\| |_| |_(_)_ _ _  _( _ ) __|
+//   / _ \  _|  _| | ' \ || / _ \__ \                         
+//  /_/ \_\__|\__|_|_||_\_, \___/___/
+//                      |__/
+//
+// Cybernetic 06/2022
+// Running on Attiny85
+// Description:
+//      1/ Turn On the ESP01
+//      2/ If ESP01 ready, send battery voltage and moisture value
+//      3/ If ESP01 return message sent, turn off the ESP01
+//      4/ Go to sleep mode during 30minutes
+//      5/ Repeat
+//
+
 #include <EEPROM.h>
 #include <SoftwareSerial.h>
 #include <avr/interrupt.h>
@@ -36,7 +56,6 @@ void setup() {
     pinMode(batteryPin, INPUT);
     pinMode(ESPPin, OUTPUT);
     digitalWrite(ESPPin, LOW);
-    mySerial.println("Hello");
 }
 
 void loop() {
@@ -74,11 +93,11 @@ void loop() {
 // set system into the sleep state
 // system wakes up when wtchdog is timed out
 void system_sleep() {
-    cbi(ADCSRA, ADEN);  // switch Analog to Digitalconverter OFF
+    cbi(ADCSRA, ADEN);                    // switch Analog to Digitalconverter OFF
     set_sleep_mode(SLEEP_MODE_PWR_DOWN);  // sleep mode is set here
     sleep_enable();
-    sleep_mode();  // System actually sleeps here
-    sleep_disable();  // System continues execution here when watchdog timed out
+    sleep_mode();       // System actually sleeps here
+    sleep_disable();    // System continues execution here when watchdog timed out
     sbi(ADCSRA, ADEN);  // switch Analog to Digitalconverter ON
 }
 
