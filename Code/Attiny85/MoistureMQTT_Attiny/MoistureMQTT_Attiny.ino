@@ -52,7 +52,7 @@ unsigned long now = 0;
 volatile boolean f_wdt = 1;
 
 void setup() {
-    OSCCAL = 64;  // Tuning Attiny85 for Serial Garbages Fix, see sketch Attiny85Tuning.ino (take the min value with hieroglyph and max and the average is the good one)
+    OSCCAL = 64;  // Tuning Attiny85 for Serial Garbages Fix, see https://jloh02.github.io/projects/tuning-attiny85/ and Attiny85Tuning.ino
     mySerial.begin(9600);
     setup_watchdog(9);
     pinMode(moisturePin, INPUT);
@@ -65,7 +65,9 @@ void loop() {
     if (f_wdt == 1) {  // wait for timed out watchdog / flag is set when a watchdog timeout occurs
         f_wdt = 0;     // reset flag
         moistureValue = analogRead(moisturePin);
+        delay(10); // See https://www.quora.com/Why-is-a-little-delay-needed-after-analogRead-in-Arduino
         batteryValue = analogRead(batteryPin);
+        delay(10); // idem
         digitalWrite(ESPPin, HIGH);
         if (mySerial.available() > 0) {
             String msg = mySerial.readStringUntil('\n'); // Default timeout is 1s
