@@ -67,10 +67,8 @@ void loop() {
         moistureValue = analogRead(moisturePin);
         batteryValue = analogRead(batteryPin);
         digitalWrite(ESPPin, HIGH);
-        while (mySerial.available() == 0) {
-        }
         if (mySerial.available() > 0) {
-            String msg = mySerial.readStringUntil('\n');
+            String msg = mySerial.readStringUntil('\n'); // Default timeout is 1s
             if ((msg == "Ready") && !ReadyReceived) {
                 ReadyReceived = true;
                 mySerial.print("moisture:");
