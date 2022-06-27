@@ -42,12 +42,15 @@ const int moisturePin = A2;
 const int ESPPin = 2;
 
 // Variables
-float moistureValue = 0;  // 0-1000
-float batteryValue = 0;
+float moistureValue = 0.0;  // 0-1000
+float batteryValue = 0.0;
+boolean ReadyReceived = false;
+const int maxtime = 200;
+unsigned long now=0;
 
 // Variables for the Sleep/power down modes:
 volatile boolean f_wdt = 1;
-bool flag_sent = true;
+
 void setup() {
     OSCCAL = 64;  // Tuning Attiny85 for Serial Garbages Fix, see sketch Attiny85Tuning.ino (take the min value with hieroglyph and max and the average is the good one)
     mySerial.begin(9600);
@@ -68,20 +71,19 @@ void loop() {
         }
         if (mySerial.available() > 0) {
             String msg = mySerial.readStringUntil('\n');
-            if (msg == "Ready" || flag) {
-                flag = false;
+            if (msg == "Ready" && !ReadyReceived) {
+                ReadyReceived = true;
                 mySerial.print("moisture:");
                 mySerial.print(moistureValue);
                 mySerial.print(",battery:");
                 mySerial.println(batteryValue);
-                while (mySerial.available() == 0) {
-                }
+                now=millis();
             }
-            if (msg == "Sent") {
-                flag = true;
+            if (msg == "Sent" || ((millis()-now)>maxtime) && (ReadyReceived)) {
                 digitalWrite(ESPPin, LOW);
                 // Set the ports to be inputs - saves more power
                 pinMode(ESPPin, INPUT);
+                ReadyReceived = false;
                 for (int i = 0; i < 255; i++) {  // 225*8s=1800s=30min
                     system_sleep();              // Send the unit to sleep
                 }
