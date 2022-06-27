@@ -47,7 +47,7 @@ float batteryValue = 0;
 
 // Variables for the Sleep/power down modes:
 volatile boolean f_wdt = 1;
-
+bool flag_sent = true;
 void setup() {
     OSCCAL = 64;  // Tuning Attiny85 for Serial Garbages Fix, see sketch Attiny85Tuning.ino (take the min value with hieroglyph and max and the average is the good one)
     mySerial.begin(9600);
@@ -68,7 +68,8 @@ void loop() {
         }
         if (mySerial.available() > 0) {
             String msg = mySerial.readStringUntil('\n');
-            if (msg == "Ready") {
+            if (msg == "Ready" || flag) {
+                flag = false;
                 mySerial.print("moisture:");
                 mySerial.print(moistureValue);
                 mySerial.print(",battery:");
@@ -77,6 +78,7 @@ void loop() {
                 }
             }
             if (msg == "Sent") {
+                flag = true;
                 digitalWrite(ESPPin, LOW);
                 // Set the ports to be inputs - saves more power
                 pinMode(ESPPin, INPUT);
