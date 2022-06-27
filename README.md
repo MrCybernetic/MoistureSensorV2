@@ -9,7 +9,7 @@ Moisture sensor sending values (battery voltage and moisture values) over MQTT. 
    - EDA ✅
    - Components 🚀
  - CAD ✅
- - Developpment ❌
+ - Developpment 🕑
  - Tests ❌
 
 ## Challenges
