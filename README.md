@@ -3,6 +3,8 @@
 ## Introduction
 Moisture sensor sending values (battery voltage and moisture values) over MQTT. The MQTT are managed by Nodered to format and send via FTP to a website to display them.
 
+![Moisture Sensor V2 - Enclosure CAD](https://github.com/MrCybernetic/MoistureSensorV2/blob/main/img/explanation.png?raw=true)
+
 ## Status
 
  - Electronics
@@ -20,7 +22,6 @@ Moisture sensor sending values (battery voltage and moisture values) over MQTT. 
 - Outdoor stuff -> Waterproof
 - Hobby stuff: 3D print, hand soldering
 
-## Pictures :
-![Moisture Sensor V2 - Enclosure CAD](https://github.com/MrCybernetic/MoistureSensorV2/blob/main/img/Capture%20d%E2%80%99%C3%A9cran%202022-06-25%20195614.png?raw=true)
+## CAO :
+![Moisture Sensor V2 - Enclosure CAD](https://github.com/MrCybernetic/MoistureSensorV2/blob/main/img/CAO.png?raw=true)
 
-![Moisture Sensor V2 - PCB EDA](https://github.com/MrCybernetic/MoistureSensorV2/blob/main/img/pcb_Kicad.png?raw=true)
