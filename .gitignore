@@ -4,3 +4,4 @@ Code/ESP01/MoistureMQTT_ESP/credentials.h
 .vscode/tasks.json
 .vscode/launch.json
 .vscode/settings.json
+*.xcf
