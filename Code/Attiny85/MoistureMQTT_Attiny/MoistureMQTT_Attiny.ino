@@ -44,7 +44,6 @@ const int ESPPin = 2;
 // Variables
 float moistureValue = 0.0;  // 0-1000
 float batteryValue = 0.0;
-boolean ReadyReceived = false;
 const int maxtime = 200;
 unsigned long now = 0;
 
@@ -52,9 +51,9 @@ unsigned long now = 0;
 volatile boolean f_wdt = 1;
 
 void setup() {
-    OSCCAL = 64;  // Tuning Attiny85 for Serial Garbages Fix, see https://jloh02.github.io/projects/tuning-attiny85/ and Attiny85Tuning.ino
-    mySerial.begin(9600);
+    OSCCAL = 144;  // Tuning Attiny85 for Serial Garbages Fix, see https://jloh02.github.io/projects/tuning-attiny85/ and Attiny85Tuning.ino
     setup_watchdog(9);
+    mySerial.begin(9600);
     pinMode(moisturePin, INPUT);
     pinMode(batteryPin, INPUT);
     pinMode(ESPPin, OUTPUT);
@@ -62,34 +61,29 @@ void setup() {
 }
 
 void loop() {
-    if (f_wdt == 1) {  // wait for timed out watchdog / flag is set when a watchdog timeout occurs
-        f_wdt = 0;     // reset flag
-        moistureValue = analogRead(moisturePin);
-        delay(10); // See https://www.quora.com/Why-is-a-little-delay-needed-after-analogRead-in-Arduino
-        batteryValue = analogRead(batteryPin);
-        delay(10); // idem
-        digitalWrite(ESPPin, HIGH);
-        if (mySerial.available() > 0) {
-            String msg = mySerial.readStringUntil('\n'); // Default timeout is 1s
-            if ((msg == "Ready") && !ReadyReceived) {
-                ReadyReceived = true;
-                mySerial.print("moisture:");
-                mySerial.print(moistureValue);
-                mySerial.print(",battery:");
-                mySerial.println(batteryValue);
-                now = millis();
+    moistureValue = analogRead(moisturePin);
+    delay(10); // See https://www.quora.com/Why-is-a-little-delay-needed-after-analogRead-in-Arduino
+    batteryValue = analogRead(batteryPin);
+    delay(10); // idem
+    digitalWrite(ESPPin, HIGH);
+    if (mySerial.available() > 0) {
+        String msg = mySerial.readStringUntil('\n'); // Default timeout is 1s
+        if ((msg == "Ready")) {
+            mySerial.print("moisture:");
+            mySerial.print(moistureValue);
+            mySerial.print(",battery:");
+            mySerial.println(batteryValue);
+            now = millis();
+        }
+        if (msg == "Sent") {
+            digitalWrite(ESPPin, LOW);
+            // Set the ports to be inputs - saves more power
+            pinMode(ESPPin, INPUT);
+            for (int i = 0; i < 255; i++) {  // 225*8s=1800s=30min
+                system_sleep();              // Send the unit to sleep
             }
-            if (((msg == "Sent") || ((millis() - now) > maxtime)) && (ReadyReceived)) {
-                digitalWrite(ESPPin, LOW);
-                // Set the ports to be inputs - saves more power
-                pinMode(ESPPin, INPUT);
-                ReadyReceived = false;
-                for (int i = 0; i < 255; i++) {  // 225*8s=1800s=30min
-                    system_sleep();              // Send the unit to sleep
-                }
-                // Set the ports to be output again
-                pinMode(ESPPin, OUTPUT);
-            }
+            // Set the ports to be output again
+            pinMode(ESPPin, OUTPUT);
         }
     }
 }

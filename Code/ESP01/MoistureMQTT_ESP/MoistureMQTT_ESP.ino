@@ -25,6 +25,7 @@ const char *password = WIFI_PASSWORD;
 const char *mqtt_server = MQTT_SERVER_URL;
 const char *HostName = "Moisture_Sensor_01";
 const char *topic_UP = "DATA0";
+char *statusMsg = "";
 
 WiFiClient espClient;
 PubSubClient client(espClient);
@@ -62,21 +63,22 @@ void reconnect() {
     }
 }
 void setup() {
-    Serial.begin(115200);
+    Serial.begin(9600);
     setup_wifi();
     client.setServer(mqtt_server, 1883);
+    statusMsg = "Ready";
 }
 
 void loop() {
     client.loop();
     if (client.connected()) {
-        Serial.println("Ready");
+        Serial.println(statusMsg);
         if (Serial.available() > 0) {
             String msg = Serial.readStringUntil('\n');
             char Buf[msg.length() + 1];
             msg.toCharArray(Buf, msg.length() + 1);
             client.publish(topic_UP, Buf);
-            Serial.println("Sent");
+            statusMsg = "Sent";
         }
     } else {
         reconnect();
