@@ -49,8 +49,8 @@ float batteryValue = 0.0;
 volatile boolean f_wdt = 1;
 
 void setup() {
-    OSCCAL = 65;  // Tuning Attiny85 for Serial Garbages Fix, see https://jloh02.github.io/projects/tuning-attiny85/ and Attiny85Tuning.ino
-    setup_watchdog(5);
+    OSCCAL = 144;  // Tuning Attiny85 for Serial Garbages Fix, see https://jloh02.github.io/projects/tuning-attiny85/ and Attiny85Tuning.ino
+    setup_watchdog(9);
     mySerial.begin(9600);
     pinMode(moisturePin, INPUT);
     pinMode(batteryPin, INPUT);
@@ -63,18 +63,7 @@ void loop() {
     delay(10); // See https://www.quora.com/Why-is-a-little-delay-needed-after-analogRead-in-Arduino
     batteryValue = analogRead(batteryPin);
     delay(10); // idem
-    mySerial.println(moistureValue);
     digitalWrite(ESPPin, HIGH);
-    delay(100);
-    digitalWrite(ESPPin, LOW);
-    // Set the ports to be inputs - saves more power
-    pinMode(ESPPin, INPUT);
-    for (int i = 0; i < 2; i++) {  // 675*8s=1h30min
-        system_sleep();              // Send the unit to sleep
-    }
-    // Set the ports to be output again
-    pinMode(ESPPin, OUTPUT);
-    /*
     if (mySerial.available() > 0) {
         String msg = mySerial.readStringUntil('\n'); // Default timeout is 1s
         if ((msg == "Ready")) {
@@ -87,13 +76,13 @@ void loop() {
             digitalWrite(ESPPin, LOW);
             // Set the ports to be inputs - saves more power
             pinMode(ESPPin, INPUT);
-            for (int i = 0; i < 675; i++) {  // 675*8s=1h30min
+            for (int i = 0; i < 255; i++) {  // 225*8s=1800s=30min
                 system_sleep();              // Send the unit to sleep
             }
             // Set the ports to be output again
             pinMode(ESPPin, OUTPUT);
         }
-    }*/
+    }
 }
 
 // set system into the sleep state
