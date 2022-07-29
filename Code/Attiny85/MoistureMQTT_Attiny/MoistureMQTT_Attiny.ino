@@ -17,6 +17,14 @@
 //      4/ Go to sleep mode during 30minutes
 //      5/ Repeat
 //
+//               ATTINY85
+//               _________
+//              |         |
+// -Reset-/A0/5-|         |-VCC
+//    CLKI/A3/3-|         |-2/SCK/SCL
+//    CLKO/A2,4-|         |-1/MISO
+//          GND-|         |-0/MOSI/SDA
+//              |_________|
 
 #include <EEPROM.h>
 #include <SoftwareSerial.h>
@@ -33,6 +41,10 @@
 #define sbi(sfr, bit) (_SFR_BYTE(sfr) |= _BV(bit))
 #endif
 
+#define MOISTURE 1
+#define BATTERY 2
+#define TEMPERATURE 3
+
 // Serial
 SoftwareSerial mySerial(1, 0);  // rx,tx
 
@@ -41,16 +53,11 @@ const int batteryPin = A3;
 const int moisturePin = A2;
 const int ESPPin = 2;
 
-// Variables
-float moistureValue = 0.0;  // 0-1000
-float batteryValue = 0.0;
-
 // Variables for the Sleep/power down modes:
 volatile boolean f_wdt = 1;
 
 void setup() {
     OSCCAL = 144;  // Tuning Attiny85 for Serial Garbages Fix, see https://jloh02.github.io/projects/tuning-attiny85/ and Attiny85Tuning.ino
-    setup_watchdog(9);
     mySerial.begin(9600);
     pinMode(moisturePin, INPUT);
     pinMode(batteryPin, INPUT);
@@ -59,30 +66,63 @@ void setup() {
 }
 
 void loop() {
-    moistureValue = analogRead(moisturePin);
-    delay(10); // See https://www.quora.com/Why-is-a-little-delay-needed-after-analogRead-in-Arduino
-    batteryValue = analogRead(batteryPin);
-    delay(10); // idem
     digitalWrite(ESPPin, HIGH);
     if (mySerial.available() > 0) {
-        String msg = mySerial.readStringUntil('\n'); // Default timeout is 1s
-        if ((msg == "Ready")) {
-            mySerial.print("moisture:");
-            mySerial.print(moistureValue);
-            mySerial.print(",battery:");
-            mySerial.println(batteryValue);
+        String msg = mySerial.readStringUntil('\n');
+        if (msg == "Ready") {
+            String msg_data;
+            msg_data += F("moisture:");
+            msg_data += String(get_value(MOISTURE), 2);
+            msg_data += F(",battery:");
+            msg_data += String(get_value(BATTERY), 2);
+            msg_data += F(",temperature:");
+            msg_data += String(get_value(TEMPERATURE), 2);
+            mySerial.println(msg_data);
         }
         if (msg == "Sent") {
+            setup_watchdog(9);
             digitalWrite(ESPPin, LOW);
-            // Set the ports to be inputs - saves more power
-            pinMode(ESPPin, INPUT);
-            for (int i = 0; i < 255; i++) {  // 225*8s=1800s=30min
+            pinMode(ESPPin, INPUT);          // Set the ports to be inputs - saves more power
+            for (int i = 0; i < 675; i++) {  // 675*8s=5400s=1h30min
                 system_sleep();              // Send the unit to sleep
             }
             // Set the ports to be output again
             pinMode(ESPPin, OUTPUT);
         }
     }
+}
+
+float get_value(int data) {
+    float value = 0.0;
+    switch (data) {
+        case MOISTURE:
+            analogRead(moisturePin);  // discard
+            value = analogRead(moisturePin);
+            //delay(1);  // See https://www.quora.com/Why-is-a-little-delay-needed-after-analogRead-in-Arduino
+            break;
+        case BATTERY:
+            analogRead(batteryPin);
+            value = analogRead(batteryPin);
+            //delay(1);  // same
+            break;
+        case TEMPERATURE:
+            get_temperature();
+            value = get_temperature();
+            //delay(1);  // same
+            break;
+        default:
+            break;
+    }
+    return value;
+}
+
+int get_temperature() {
+    ADMUX = 0xaf & (0x8f | ADMUX);  // Set ADMUX to 0x8F in order to choose ADC4 and Set VREF to 1.1V (Without changing ADLAR p134 in datasheet)
+    //delay(1);
+    ADCSRA |= _BV(ADSC);  // Start conversion
+    while ((ADCSRA & _BV(ADSC)))
+        ;  // Wait until conversion is finished
+    return (ADCH << 8) | ADCL;
 }
 
 // set system into the sleep state
