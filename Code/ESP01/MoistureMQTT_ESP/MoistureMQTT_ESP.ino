@@ -27,6 +27,8 @@ const char *HostName = "Moisture_Sensor_01";
 const char *topic_UP = "DATA0";
 char *statusMsg = "";
 
+long previous_millis = 0;
+
 WiFiClient espClient;
 PubSubClient client(espClient);
 
@@ -66,20 +68,25 @@ void setup() {
     Serial.begin(9600);
     setup_wifi();
     client.setServer(mqtt_server, 1883);
-    statusMsg = "Ready";
+    statusMsg = "<Ready>";
 }
 
 void loop() {
+    unsigned long now = millis();
     client.loop();
     if (client.connected()) {
+      if (now - previous_millis >= 200) {
         Serial.println(statusMsg);
+        previous_millis = now;
+      }
         if (Serial.available() > 0) {
             String msg = Serial.readStringUntil('\n');
             char Buf[msg.length() + 1];
             msg.toCharArray(Buf, msg.length() + 1);
             client.publish(topic_UP, Buf);
-            statusMsg = "Sent";
+            statusMsg = "<Sent>";
         }
+        
     } else {
         reconnect();
     }

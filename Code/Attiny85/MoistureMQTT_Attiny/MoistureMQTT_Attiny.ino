@@ -56,39 +56,59 @@ const int ESPPin = 2;
 // Variables for the Sleep/power down modes:
 volatile boolean f_wdt = 1;
 
+// Variables for Serial com
+const byte numChars = 32;
+char receivedChars[numChars];  // an array to store the received data
+boolean newData = false;
+#define NONE 1
+#define READY_RECEIVED 2
+#define SENT_RECEIVED 3
+int status = 0;
+long previous_millis = 0;
+
 void setup() {
-    OSCCAL = 144;  // Tuning Attiny85 for Serial Garbages Fix, see https://jloh02.github.io/projects/tuning-attiny85/ and Attiny85Tuning.ino
+    OSCCAL = 65;  // Tuning Attiny85 for Serial Garbages Fix, see https://jloh02.github.io/projects/tuning-attiny85/ and Attiny85Tuning.ino
     mySerial.begin(9600);
     pinMode(moisturePin, INPUT);
     pinMode(batteryPin, INPUT);
     pinMode(ESPPin, OUTPUT);
-    digitalWrite(ESPPin, LOW);
+    digitalWrite(ESPPin, HIGH);
 }
 
 void loop() {
-    digitalWrite(ESPPin, HIGH);
-    if (mySerial.available() > 0) {
-        String msg = mySerial.readStringUntil('\n');
-        if (msg == "Ready") {
-            String msg_data;
+    unsigned long now = millis();
+    recvWithStartEndMarkers();
+    status = showNewData();
+    String msg_data;
+    switch (status)
+    {
+    case READY_RECEIVED:
+        if (now - previous_millis >= 200) {
             msg_data += F("moisture:");
             msg_data += String(get_value(MOISTURE), 2);
             msg_data += F(",battery:");
             msg_data += String(get_value(BATTERY), 2);
             msg_data += F(",temperature:");
             msg_data += String(get_value(TEMPERATURE), 2);
-            mySerial.println(msg_data);
+            mySerial.print("<");
+            mySerial.print(msg_data);
+            mySerial.println(">");
+            previous_millis = now;
         }
-        if (msg == "Sent") {
-            setup_watchdog(9);
-            digitalWrite(ESPPin, LOW);
-            pinMode(ESPPin, INPUT);          // Set the ports to be inputs - saves more power
-            for (int i = 0; i < 675; i++) {  // 675*8s=5400s=1h30min
-                system_sleep();              // Send the unit to sleep
-            }
-            // Set the ports to be output again
-            pinMode(ESPPin, OUTPUT);
+        break;
+    case SENT_RECEIVED:
+        setup_watchdog(9);
+        digitalWrite(ESPPin, LOW);
+        pinMode(ESPPin, INPUT);          // Set the ports to be inputs - saves more power
+        for (int i = 0; i < 675; i++) {  // 675*8s=5400s=1h30min
+            system_sleep();              // Send the unit to sleep
         }
+        // Set the ports to be output again
+        pinMode(ESPPin, OUTPUT);
+        digitalWrite(ESPPin, HIGH);
+        break;
+    default:
+        break;
     }
 }
 
@@ -98,17 +118,17 @@ float get_value(int data) {
         case MOISTURE:
             analogRead(moisturePin);  // discard
             value = analogRead(moisturePin);
-            //delay(1);  // See https://www.quora.com/Why-is-a-little-delay-needed-after-analogRead-in-Arduino
+            delay(1);  // See https://www.quora.com/Why-is-a-little-delay-needed-after-analogRead-in-Arduino
             break;
         case BATTERY:
             analogRead(batteryPin);
             value = analogRead(batteryPin);
-            //delay(1);  // same
+            delay(1);  // same
             break;
         case TEMPERATURE:
             get_temperature();
             value = get_temperature();
-            //delay(1);  // same
+            delay(1);  // same
             break;
         default:
             break;
@@ -118,10 +138,8 @@ float get_value(int data) {
 
 int get_temperature() {
     ADMUX = 0xaf & (0x8f | ADMUX);  // Set ADMUX to 0x8F in order to choose ADC4 and Set VREF to 1.1V (Without changing ADLAR p134 in datasheet)
-    //delay(1);
     ADCSRA |= _BV(ADSC);  // Start conversion
-    while ((ADCSRA & _BV(ADSC)))
-        ;  // Wait until conversion is finished
+    while ((ADCSRA & _BV(ADSC)));  // Wait until conversion is finished
     return (ADCH << 8) | ADCL;
 }
 
@@ -157,4 +175,45 @@ void setup_watchdog(int ii) {
 // Watchdog Interrupt Service / is executed when watchdog timed out
 ISR(WDT_vect) {
     f_wdt = 1;  // set global flag
+}
+
+void recvWithStartEndMarkers() {
+    static boolean recvInProgress = false;
+    static byte ndx = 0;
+    char startMarker = '<';
+    char endMarker = '>';
+    char rc;
+    while (mySerial.available() > 0 && newData == false) {
+        rc = mySerial.read();
+
+        if (recvInProgress == true) {
+            if (rc != endMarker) {
+                receivedChars[ndx] = rc;
+                ndx++;
+                if (ndx >= numChars) {
+                    ndx = numChars - 1;
+                }
+            } else {
+                receivedChars[ndx] = '\0';  // terminate the string
+                recvInProgress = false;
+                ndx = 0;
+                newData = true;
+            }
+        } else if (rc == startMarker) {
+            recvInProgress = true;
+        }
+    }
+}
+
+int showNewData() {
+    if (newData == true) {
+        newData = false;
+        if (strcmp(receivedChars, "Ready")==0) {
+            return READY_RECEIVED;
+        } else if (strcmp(receivedChars, "Sent")==0) {
+            return SENT_RECEIVED;
+        } else {
+            return NONE;
+        }
+    }
 }
