@@ -1,7 +1,7 @@
 #include <SoftwareSerial.h>
 
-#define comRx 3
-#define comTx 4
+#define comRx 1
+#define comTx 0
 
 #define PRINT_TIMES 1000
 #define Serial compSer
