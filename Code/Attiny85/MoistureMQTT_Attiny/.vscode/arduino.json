@@ -1,0 +1,6 @@
+{
+    "port": "COM9",
+    "configuration": "cpu=attiny85,clock=internal8",
+    "board": "attiny:avr:ATtinyX5",
+    "sketch": "MoistureMQTT_Attiny.ino"
+}
