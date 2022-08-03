@@ -80,40 +80,39 @@ void loop() {
     recvWithStartEndMarkers();
     status = showNewData();
     String msg_data;
-    switch (status)
-    {
-    case READY_RECEIVED:
-        if (now - previous_millis >= 200) {
-            msg_data += F("moisture:");
-            msg_data += String(get_value(MOISTURE), 2);
-            msg_data += F(",battery:");
-            msg_data += String(get_value(BATTERY), 2);
-            msg_data += F(",temperature:");
-            msg_data += String(get_value(TEMPERATURE), 2);
-            mySerial.print("<");
-            mySerial.print(msg_data);
-            mySerial.println(">");
-            previous_millis = now;
-        }
-        break;
-    case SENT_RECEIVED:
-        setup_watchdog(9);
-        digitalWrite(ESPPin, LOW);
-        pinMode(ESPPin, INPUT);          // Set the ports to be inputs - saves more power
-        for (int i = 0; i < 675; i++) {  // 675*8s=5400s=1h30min
-            system_sleep();              // Send the unit to sleep
-        }
-        // Set the ports to be output again
-        pinMode(ESPPin, OUTPUT);
-        digitalWrite(ESPPin, HIGH);
-        break;
-    default:
-        break;
+    switch (status) {
+        case READY_RECEIVED:
+            if (now - previous_millis >= 200) {
+                msg_data += F("m:");
+                msg_data += String(get_value(MOISTURE));
+                msg_data += F(",b:");
+                msg_data += String(get_value(BATTERY));
+                msg_data += F(",t:");
+                msg_data += String(get_value(TEMPERATURE));
+                mySerial.print("<");
+                mySerial.print(msg_data);
+                mySerial.println(">");
+                previous_millis = now;
+            }
+            break;
+        case SENT_RECEIVED:
+            setup_watchdog(9);
+            digitalWrite(ESPPin, LOW);
+            pinMode(ESPPin, INPUT);          // Set the ports to be inputs - saves more power
+            for (int i = 0; i < 100; i++) {  // 675*8s=5400s=1h30min
+                system_sleep();              // Send the unit to sleep
+            }
+            // Set the ports to be output again
+            pinMode(ESPPin, OUTPUT);
+            digitalWrite(ESPPin, HIGH);
+            break;
+        default:
+            break;
     }
 }
 
-float get_value(int data) {
-    float value = 0.0;
+int get_value(int data) {
+    int value = 0;
     switch (data) {
         case MOISTURE:
             analogRead(moisturePin);  // discard
@@ -138,7 +137,7 @@ float get_value(int data) {
 
 int get_temperature() {
     ADMUX = 0xaf & (0x8f | ADMUX);  // Set ADMUX to 0x8F in order to choose ADC4 and Set VREF to 1.1V (Without changing ADLAR p134 in datasheet)
-    ADCSRA |= _BV(ADSC);  // Start conversion
+    ADCSRA |= _BV(ADSC);            // Start conversion
     while ((ADCSRA & _BV(ADSC)));  // Wait until conversion is finished
     return (ADCH << 8) | ADCL;
 }
@@ -185,7 +184,6 @@ void recvWithStartEndMarkers() {
     char rc;
     while (mySerial.available() > 0 && newData == false) {
         rc = mySerial.read();
-
         if (recvInProgress == true) {
             if (rc != endMarker) {
                 receivedChars[ndx] = rc;
@@ -208,9 +206,9 @@ void recvWithStartEndMarkers() {
 int showNewData() {
     if (newData == true) {
         newData = false;
-        if (strcmp(receivedChars, "Ready")==0) {
+        if (strcmp(receivedChars, "Ready") == 0) {
             return READY_RECEIVED;
-        } else if (strcmp(receivedChars, "Sent")==0) {
+        } else if (strcmp(receivedChars, "Sent") == 0) {
             return SENT_RECEIVED;
         } else {
             return NONE;
