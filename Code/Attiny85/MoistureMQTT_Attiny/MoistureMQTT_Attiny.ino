@@ -41,6 +41,8 @@
 #define sbi(sfr, bit) (_SFR_BYTE(sfr) |= _BV(bit))
 #endif
 
+volatile boolean f_wdt = 1;
+
 #define MOISTURE 1
 #define BATTERY 2
 #define TEMPERATURE 3
@@ -52,9 +54,6 @@ SoftwareSerial mySerial(1, 0);  // rx,tx
 const int batteryPin = A3;
 const int moisturePin = A2;
 const int ESPPin = 2;
-
-// Variables for the Sleep/power down modes:
-volatile boolean f_wdt = 1;
 
 // Variables for Serial com
 const byte numChars = 32;
@@ -73,6 +72,7 @@ void setup() {
     pinMode(batteryPin, INPUT);
     pinMode(ESPPin, OUTPUT);
     digitalWrite(ESPPin, HIGH);
+    setup_watchdog(9);
 }
 
 void loop() {
@@ -96,7 +96,6 @@ void loop() {
             }
             break;
         case SENT_RECEIVED:
-            setup_watchdog(9);
             digitalWrite(ESPPin, LOW);
             pinMode(ESPPin, INPUT);          // Set the ports to be inputs - saves more power
             for (int i = 0; i < 100; i++) {  // 675*8s=5400s=1h30min
@@ -171,11 +170,6 @@ void setup_watchdog(int ii) {
     WDTCR |= _BV(WDIE);
 }
 
-// Watchdog Interrupt Service / is executed when watchdog timed out
-ISR(WDT_vect) {
-    f_wdt = 1;  // set global flag
-}
-
 void recvWithStartEndMarkers() {
     static boolean recvInProgress = false;
     static byte ndx = 0;
@@ -214,4 +208,10 @@ int showNewData() {
             return NONE;
         }
     }
+    return NONE;
+}
+
+// Watchdog Interrupt Service / is executed when watchdog timed out
+ISR(WDT_vect) {
+    f_wdt = 1;  // set global flag
 }
