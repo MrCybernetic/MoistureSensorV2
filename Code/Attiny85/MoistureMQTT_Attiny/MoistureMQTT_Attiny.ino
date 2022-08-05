@@ -98,7 +98,7 @@ void loop() {
         case SENT_RECEIVED:
             digitalWrite(ESPPin, LOW);
             pinMode(ESPPin, INPUT);          // Set the ports to be inputs - saves more power
-            for (int i = 0; i < 100; i++) {  // 675*8s=5400s=1h30min
+            for (int i = 0; i < 675; i++) {  // 675*8s=5400s=1h30min
                 system_sleep();              // Send the unit to sleep
             }
             // Set the ports to be output again
