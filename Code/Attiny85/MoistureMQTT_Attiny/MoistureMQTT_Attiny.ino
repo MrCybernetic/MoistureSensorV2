@@ -66,7 +66,7 @@ int status = 0;
 long previous_millis = 0;
 
 void setup() {
-    OSCCAL = 65;  // Tuning Attiny85 for Serial Garbages Fix, see https://jloh02.github.io/projects/tuning-attiny85/ and Attiny85Tuning.ino
+    OSCCAL = 144;  //0 65 //1 144// Tuning Attiny85 for Serial Garbages Fix, see https://jloh02.github.io/projects/tuning-attiny85/ and Attiny85Tuning.ino
     mySerial.begin(9600);
     pinMode(moisturePin, INPUT);
     pinMode(batteryPin, INPUT);

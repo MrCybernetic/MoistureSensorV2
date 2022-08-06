@@ -19,8 +19,8 @@
 const char *ssid = WIFI_SSID;
 const char *password = WIFI_PASSWORD;
 const char *mqtt_server = MQTT_SERVER_URL;
-const char *HostName = "Moisture_Sensor_01";
-const char *topic_UP = "DATA0";
+const char *HostName = "Moisture_Sensor_02";
+const char *topic_UP = "DATA1";
 WiFiClient espClient;
 PubSubClient client(espClient);
 // Time
